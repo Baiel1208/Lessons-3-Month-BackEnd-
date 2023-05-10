@@ -55,27 +55,6 @@ async def download_video(message: types.Message, state: FSMContext):
     video.close()
     await state.finish()
     
-# @dp.message_handler(lambda message: 'youtube.com/' in message.text)
-# async def youtube_handler(message: types.Message):
-   
-    # video_url = message.text
-    # await message.answer('Скачиваю и отправляю видео...')
-    # await download_and_send_video(video_url, message.chat.id)
-    # await message.answer('Готово!')
-    # yt = YouTube( use_oauth=True,allow_oauth_cache=True)
-    # yt.streams.filter(progressive=True,file_extension="mp4").order_by('resolution').desc().first().download()
-    # with open(yt, 'rb') as f:
-    #     msg = await bot.send_video( f)
-    #     # Удаляем файл после отправки
-    #     os.remove(yt)
-
-# @dp.message_handler(state=VideoState.download)
-# async def download_video(message:types.Message, state:FSMContext):
-#     if message.text == "Geeks":
-#         await message.answer("Go")
-#     else:
-#         await message.answer("Я вас понял")
-#     await state.finish()
 
 @dp.message_handler()
 async def not_found(message:types.Message):
