@@ -5,3 +5,5 @@ GitHub.txt
 .env
 audio/
 video/
+__pycache__
+database.db

@@ -20,4 +20,4 @@ async def play(message:types.Message):
         await message.reply(f'Неправильно. Число было {num}.')
 
 
-executor.start_polling(dp)
+executor.start_polling(dp, skip_updates=True)
