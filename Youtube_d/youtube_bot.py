@@ -5,7 +5,7 @@ from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
-from function import is_youtube_link, resolutions, download_video, download_audio, MAX_SIZE
+from Youtube_d.function import is_youtube_link, resolutions, download_video, download_audio, MAX_SIZE
 
 load_dotenv('.env')
 bot = Bot(os.environ.get('KEY'))
