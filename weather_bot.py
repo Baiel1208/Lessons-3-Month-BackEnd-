@@ -10,6 +10,7 @@ API = config("API")
 def start(message):
     bot.send_message(message.chat.id,'Привет, рад тебя видет! Напишите название города')
 
+
 @bot.message_handler(content_types=['text'])
 def get_weather(message):
     city = message.text.strip().lower()
