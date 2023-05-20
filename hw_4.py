@@ -16,7 +16,7 @@ dp = Dispatcher(bot=bot,storage=storage)
 database = sqlite3.connect('telegram.db')
 cursor = database.cursor()
 cursor.execute("""CREATE TABLE IF NOT EXISTS users(
-    id_user INT,
+    id_user INTEGER PRIMARY KEY,
     first_name VARCHAR(100),
     last_name VARCHAR(100),
     username VARCHAR(100),
@@ -25,16 +25,16 @@ cursor.execute("""CREATE TABLE IF NOT EXISTS users(
 """)
 
 cursor.execute("""CREATE TABLE IF NOT EXISTS address(
-    id_user INT,
+    id_user INTEGER PRIMARY KEY,
     address_longitude VARCHAR(100),
     address_latitude VARCHAR(100)
 );
 """)
 
 cursor.execute("""CREATE TABLE IF NOT EXISTS orders(
-    title INT,
-    address_destination VARCHAR(100),
-    date_time_order VARCHAR(100)
+    title VARCHAR(255),
+    address_destination VARCHAR(255),
+    date_time_order VARCHAR(255)
 );
 """)
 cursor.connection.commit()
@@ -46,39 +46,65 @@ inline_buttons = [
 ]
 inlines = InlineKeyboardMarkup().add(*inline_buttons)
 
-class NumState(StatesGroup):
-    phone_num = State()
-
-@dp.callback_query_handler(lambda num: num.data == 'inline_num')
-async def inline_num(callback_query: types.CallbackQuery):
-    await bot.answer_callback_query(callback_query.id)
-    await bot.send_message(callback_query.from_user.id, "Пожалуйста, отправьте свой номер телефона.", reply_markup=types.ReplyKeyboardRemove())
-
-@dp.message_handler(content_types=types.ContentType.CONTACT)
-async def handle_contact(message: types.Message):
-    cursor.execute(f"UPDATE users SET phone_number = {message.contact.phone_number} WHERE id_user = {message.from_user.id};")
-    cursor.connection.commit()
-    if len(message.text) == 13 and message.text[1:].isdigit() and message.text[0] == "+":
-        await message.answer("Номер телефона успешно добавлен!")
+# class NumState(StatesGroup):
+#     phone_num = State()
     
 @dp.message_handler(commands=['start'])
 async def start(message: types.Message):
     cursor=database.cursor()
     cursor.execute(f"SELECT id_user FROM users WHERE id_user = {message.from_user.id};")
     res = cursor.fetchall()
-    if res == []:
-        cursor.execute(f"""INSERT INTO users VALUES (
+    if not  res:
+        cursor.execute(f"""INSERT INTO users (id_user, first_name, last_name, username) VALUES (
             {message.from_user.id},
             '{message.from_user.first_name}',
             '{message.from_user.last_name}',
-            '{message.from_user.username}',
-            NULL
-        )
+            '{message.from_user.username}'
+        );
         """)
         cursor.connection.commit()
-    await message.answer(f'Здравствуйте {message.from_user.full_name}.\nМожете заказать еду.',reply_markup=inlines)
+    await message.answer(f'Здравствуйте {message.from_user.full_name}!\nМожете заказать еду.',reply_markup=inlines)
         
+@dp.callback_query_handler(lambda call: call.data == 'inline_num')
+async def phone_num(call: types.CallbackQuery):
+    await call.message.answer("Отправить номер", reply_markup=types.ReplyKeyboardRemove())
+    await bot.send_contact(call.message.chat.id, phone_number='')
 
+
+@dp.message_handler(content_types=types.ContentType.CONTACT)
+async def save_phone_num(message:types.Message):
+    cursor = database.cursor()
+    cursor.execute(f"UPDATE users SET phone_number = '{message.contact.phone_number}' WHERE id_user = {message.from_user.id};")
+    cursor.connection.commit()
+    message.answer('Номер сохранен')
+
+
+@dp.callback_query_handler(lambda call: call.data =='inline_loc')
+async def loc(call:types.CallbackQuery):
+    await call.message.answer('Отправить локацию',reply_markup=types.ReplyKeyboardRemove())
+    await bot.send_location(call.message.chat.id, latitude=0.0, longitude=0.0)
+
+
+@dp.message_handler(content_types=types.ContentType.LOCATION)
+async def save_loc(message: types.Message):
+    cursor = database.cursor()
+    cursor.execute(f"INSERT INTO address (id_user, address_longitude, address_latitude) VALUES ({message.from_user.id}, '{message.location.longitude}', '{message.location.latitude}');")
+    cursor.connection.commit()
+    await message.answer("Локация сохранена")
+
+
+@dp.callback_query_handler(lambda call: call.data == 'inline_food')
+async def order_food(call: types.CallbackQuery):
+    await call.message.answer('Заказать еду: ')
+    await bot.delete_message(call.message.chat.id,call.message.message_id)
+
+
+@dp.message_handler(text = "Заказать еду")
+async def save_order(message:types.Message):
+    cursor = database.cursor()
+    cursor.execute(f"INSERT INTO orders (title, address_destination, date_time_order) VALUES ('{message.text}', 'адрес', 'дата и время');")
+    cursor.connection.commit()
+    await message.answer('Заказ сохранен')
 
 
 
