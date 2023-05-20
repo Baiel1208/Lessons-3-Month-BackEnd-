@@ -3,8 +3,8 @@ from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher import FSMContext
 from dotenv import load_dotenv
 import os, logging, sqlite3, time
-from Lesson_4.keyboards import inline
-from Lesson_4.states import SignUpState
+from keyboards import inline 
+from states import SignUpState
 
 load_dotenv('.env')
 
@@ -29,6 +29,10 @@ cursor.execute("""CREATE TABLE IF NOT EXISTS signup(
     created VARCHAR(200)
 );
 """)
+
+
+
+
 cursor.connection.commit()
 logging.basicConfig(level=logging.INFO)
 

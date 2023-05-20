@@ -7,3 +7,8 @@ audio/
 video/
 __pycache__
 database.db
+weather_bot.py
+month3
+money_con.py
+main.py
+telegram.db
