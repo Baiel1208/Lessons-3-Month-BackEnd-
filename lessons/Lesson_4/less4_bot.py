@@ -3,8 +3,8 @@ from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher import FSMContext
 from dotenv import load_dotenv
 import os, logging, sqlite3, time
-from keyboards import inline 
-from states import SignUpState
+from Lesson_4.keyboards import inline 
+from lessons.Lesson_4.states import SignUpState
 
 load_dotenv('.env')
 

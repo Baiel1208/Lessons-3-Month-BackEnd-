@@ -46,8 +46,10 @@ inline_buttons = [
 ]
 inlines = InlineKeyboardMarkup().add(*inline_buttons)
 
-# class NumState(StatesGroup):
-#     phone_num = State()
+class States(StatesGroup):
+    phone_number = State()
+    location = State()
+    title = State()
     
 @dp.message_handler(commands=['start'])
 async def start(message: types.Message):
@@ -65,24 +67,24 @@ async def start(message: types.Message):
         cursor.connection.commit()
     await message.answer(f'Здравствуйте {message.from_user.full_name}!\nМожете заказать еду.',reply_markup=inlines)
         
-@dp.callback_query_handler(lambda call: call.data == 'inline_num')
-async def phone_num(call: types.CallbackQuery):
-    await call.message.answer("Отправить номер", reply_markup=types.ReplyKeyboardRemove())
-    await bot.send_contact(call.message.chat.id, phone_number='')
+@dp.callback_query_handler(text=['inline_num'])
+async def phone_number(callbak: types.CallbackQuery):
+    await bot.send_message(callbak.message.chat.id, "Введите ваш телефонный номер:")
+    await States.phone_number.set()
 
 
-@dp.message_handler(content_types=types.ContentType.CONTACT)
-async def save_phone_num(message:types.Message):
+@dp.message_handler(state=States.phone_number)
+async def send_number(message: types.Message, state: FSMContext):
     cursor = database.cursor()
-    cursor.execute(f"UPDATE users SET phone_number = '{message.contact.phone_number}' WHERE id_user = {message.from_user.id};")
+    cursor.execute("""UPDATE users SET phone_number = ? WHERE user_id = ?;""")
     cursor.connection.commit()
     message.answer('Номер сохранен')
+    await state.finish()
 
-
-@dp.callback_query_handler(lambda call: call.data =='inline_loc')
-async def loc(call:types.CallbackQuery):
-    await call.message.answer('Отправить локацию',reply_markup=types.ReplyKeyboardRemove())
-    await bot.send_location(call.message.chat.id, latitude=0.0, longitude=0.0)
+@dp.callback_query_handler(text=['inline_loc'])
+async def location(callbak: types.CallbackQuery):
+    await bot.send_message(callbak.message.chat.id, "Отправьте вашу локацию:")
+    await States.location.set()
 
 
 @dp.message_handler(content_types=types.ContentType.LOCATION)
@@ -99,12 +101,12 @@ async def order_food(call: types.CallbackQuery):
     await bot.delete_message(call.message.chat.id,call.message.message_id)
 
 
-@dp.message_handler(text = "Заказать еду")
-async def save_order(message:types.Message):
+@dp.callback_query_handler(text=['inline_food'])
+async def order(callbak: types.CallbackQuery):
     cursor = database.cursor()
-    cursor.execute(f"INSERT INTO orders (title, address_destination, date_time_order) VALUES ('{message.text}', 'адрес', 'дата и время');")
+    cursor.execute(f"INSERT INTO orders (title, address_destination, date_time_order) VALUES ('{callbak.text}', 'адрес', 'дата и время');")
     cursor.connection.commit()
-    await message.answer('Заказ сохранен')
+    await callbak.answer('Заказ сохранен')
 
 
 

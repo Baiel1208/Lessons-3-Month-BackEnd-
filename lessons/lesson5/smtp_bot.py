@@ -66,7 +66,7 @@ async def send_message(message:types.Message, state:FSMContext):
         smtp_login = os.environ.get('smtp_email')
         password = os.environ.get('smtp_password')
         sender = os.environ.get('smtp_email')
-        recipient_email = 'abdykadyrov05.b@gmail.com','ktoktorov144@gmail.com', 'toktorovkurmanbek92@gmail.com', 'ashatkydyrov433@gmail.com', 'toktoroveldos15@gmail.com','baiel000005@gmail.com'
+        recipient_email = '@gmail.com'
 
         with smtplib.SMTP(smtp_host, smtp_port) as server:
             server.starttls()
