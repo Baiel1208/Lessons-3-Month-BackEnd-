@@ -22,9 +22,9 @@ def send_mail(subject:str,message:str,to_email:str) -> bool:
     except Exception as error:
         return f'Error: {error}'
     
-# print(send_mail('SMTP PYTHON',' Hello World','baiel000005@gmail.com'))
+# print(send_mail('SMTP PYTHON',' Hello World','@gmail.com'))
 
-emails = ['ktoktorov144@gmail.com', 'toktorovkurmanbek92@gmail.com', 'ashatkydyrov433@gmail.com', 'toktoroveldos15@gmail.com','baiel000005@gmail.com']
+emails = ['@gmail.com']
 print(send_mail('SMTP PYTHON',' Hello World',emails))
 
 
