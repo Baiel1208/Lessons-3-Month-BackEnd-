@@ -4,12 +4,13 @@ import os, aioschedule, requests, logging, asyncio,sqlite3
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
+from aiogram.types import InlineKeyboardButton,InlineKeyboardMarkup
 load_dotenv('.env')
 
 bot = Bot(os.environ.get('TOKEN1'))
 storage = MemoryStorage()
 dp = Dispatcher(bot=bot,storage=storage)
-logging.basicConfig(level=logging.INFO)
+
 
 database = sqlite3.connect('list.db')
 cursor = database.cursor()
@@ -20,49 +21,51 @@ cursor.execute('''
         time TEXT
     );
 ''')
+cursor.connection.commit()
+
+inkb = InlineKeyboardMarkup()
+ikb = [
+    InlineKeyboardButton("Добавить задачу", callback_data="inline_title"),
+    InlineKeyboardButton("Удалить задачу", callback_data="inline_delete")
+]
+
+inkb.add(*ikb)
 
 class FSMList(StatesGroup):
     title = State()
     time = State()
 
-
-
 @dp.message_handler(commands='start')
 async def start(message:types.Message):
-    await message.answer(f"Привет! Добавь свою задачу в формате {message.from_user.full_name}")
-    try:
-        command, title, time = message.text.split()
-        task = FSMList(title, time)
+    # cursor=database.cursor()
+    # cursor.execute(f"""INSERT INTO users id VALUES ({message.from_user.id},);""")
+    # cursor.connection.commit()
+    await message.answer(f"Привет! {message.from_user.full_name}\nМожете добавить свою задачу.",reply_markup=inkb)
 
-        # Сохранение задачи в базе данных
-        cursor.execute('INSERT INTO tasks (title, time) VALUES (?, ?)', (task.title, task.time))
-        cursor.commit()
+@dp.callback_query_handler(lambda call:call)
+async def inline(call):
+    if call.data == 'inline_title':
+        await inline_title(call.message)
 
-        await message.reply("Задача успешно добавлена!")
-    except Exception as e:
-        await message.reply(f"Ошибка при добавлении задачи: {str(e)}")
+
+@dp.callback_query_handler(text=['inline_title'])
+async def inline_title(message:types.Message):
     
-# async def send_message():
-#     await bot.send_message(chat_id=5695269601, text="Hello Geeks")
+    await FSMList.title.set()
+    await bot.answer_callback_query( "Введите задачу:")
+    await FSMList.next()
+    message.answer("Введите время: ")
+    
 
-# async def schedule():
-#     aioschedule.every().minutes.do(FSMList.time) 
-#     while True:
-#         await aioschedule.run_pending()
+@dp.callback_query_handler(state=FSMList.time)
+async def send_title(message: types.Message, state: FSMContext):
+    # await FSMList.time.set()
+    # cursor = database.cursor()
+    # cursor.execute("""UPDATE tasks SET title = ? WHERE id = ?""", (message.from_user.id))
+    # cursor.connection.commit()
+    message.answer('Задача сохранен')
+    await state.finish()
 
-# async def on_startup(hello):
-#     asyncio.create_task(schedule())
-
-# executor.start_polling(dp, skip_updates=True, on_startup=on_startup)
-async def send_message():
-    await bot.send_message(chat_id=5695269601, text="Hello Geeks")
-
-async def schedule():
-    aioschedule.every(0.5).seconds.do(send_message) 
-    while True:
-        await aioschedule.run_pending()
-
-async def on_startup(hello):
-    asyncio.create_task(schedule())
-
-executor.start_polling(dp, skip_updates=True, on_startup=on_startup)
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
+    executor.start_polling(dp, skip_updates=True)
