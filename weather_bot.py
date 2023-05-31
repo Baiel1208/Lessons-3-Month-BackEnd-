@@ -3,8 +3,8 @@ from decouple import config
 import requests
 import json
 
-KEY = config("KEY")
-bot = telebot.TeleBot(token=KEY)
+token = config("token")
+bot = telebot.TeleBot(token=token)
 API = config("API")
 @bot.message_handler(commands=['start'])
 def start(message):
@@ -23,4 +23,4 @@ def get_weather(message):
         bot.reply_to(message,f'Город указан не верно!')
 
 
-bot.polling(non_stop=True)
+bot.polling(non_stop=True,)
